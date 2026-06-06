@@ -1,0 +1,38 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { GraduationCap, Shield, UserCircle } from 'lucide-react';
+import { ADMIN_LOGIN, TEACHER_LOGIN } from '../utils/authRoutes';
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-blue-900 flex items-center justify-center p-4">
+      <div className="w-full max-w-lg text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
+          <GraduationCap size={32} className="text-white" />
+        </div>
+        <h1 className="text-3xl font-bold text-white">TAMS</h1>
+        <p className="text-slate-300 mt-1 text-sm mb-10">Teacher Attendance Management System</p>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Link
+            to={ADMIN_LOGIN}
+            className="bg-white rounded-2xl shadow-2xl p-6 hover:shadow-blue-500/20 transition-shadow group"
+          >
+            <Shield size={32} className="mx-auto text-blue-600 mb-3 group-hover:scale-110 transition-transform" />
+            <h2 className="text-lg font-semibold text-gray-800">Admin Login</h2>
+            <p className="text-sm text-gray-500 mt-1">Principal &amp; administrators</p>
+          </Link>
+
+          <Link
+            to={TEACHER_LOGIN}
+            className="bg-white rounded-2xl shadow-2xl p-6 hover:shadow-emerald-500/20 transition-shadow group"
+          >
+            <UserCircle size={32} className="mx-auto text-emerald-600 mb-3 group-hover:scale-110 transition-transform" />
+            <h2 className="text-lg font-semibold text-gray-800">Teacher Login</h2>
+            <p className="text-sm text-gray-500 mt-1">Staff attendance portal</p>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

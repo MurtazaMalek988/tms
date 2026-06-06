@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: tams_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tams_db}
+      POSTGRES_USER: ${DB_USER:-tams_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tams_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/src/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tams_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tams_user} -d ${DB_NAME:-tams_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: tams_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      DB_HOST: db
+      DB_PORT: 5432
+      PORT: 5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/src:/app/src
+      - uploads_data:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - tams_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: tams_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - tams_network
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  tams_network:
+    driver: bridge

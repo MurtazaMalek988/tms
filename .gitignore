@@ -1,0 +1,10 @@
+node_modules/
+.env
+*.log
+dist/
+build/
+uploads/
+backups/
+.DS_Store
+*.pem
+nginx/ssl/
