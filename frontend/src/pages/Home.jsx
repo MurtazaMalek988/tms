@@ -1,17 +1,14 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { GraduationCap, Shield, UserCircle } from 'lucide-react';
+import { Shield, UserCircle } from 'lucide-react';
+import { BrandHeader, SYSTEM_NAME } from '../components/AppLogo';
 import { ADMIN_LOGIN, TEACHER_LOGIN } from '../utils/authRoutes';
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-blue-900 flex items-center justify-center p-4">
       <div className="w-full max-w-lg text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 rounded-2xl mb-4 shadow-lg">
-          <GraduationCap size={32} className="text-white" />
-        </div>
-        <h1 className="text-3xl font-bold text-white">TAMS</h1>
-        <p className="text-slate-300 mt-1 text-sm mb-10">Teacher Attendance Management System</p>
+        <BrandHeader subtitle={SYSTEM_NAME} className="mb-10" size="xl" />
 
         <div className="grid sm:grid-cols-2 gap-4">
           <Link

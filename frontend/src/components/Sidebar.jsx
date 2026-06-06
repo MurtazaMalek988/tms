@@ -3,8 +3,9 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart2,
-  Settings, LogOut, GraduationCap, X,
+  Settings, LogOut, X,
 } from 'lucide-react';
+import { SidebarBrand } from './AppLogo';
 import { getLoginPath } from '../utils/authRoutes';
 
 const adminNav = [
@@ -33,11 +34,8 @@ export default function Sidebar({ onClose }) {
   return (
     <div className="h-full bg-slate-800 text-white flex flex-col">
       {/* Logo */}
-      <div className="h-14 flex items-center justify-between px-4 border-b border-slate-700">
-        <div className="flex items-center gap-2">
-          <GraduationCap size={24} className="text-blue-400" />
-          <span className="font-bold text-lg">TAMS</span>
-        </div>
+      <div className="min-h-14 flex items-center justify-between px-4 py-2 border-b border-slate-700">
+        <SidebarBrand />
         <button onClick={onClose} className="lg:hidden p-1 hover:bg-slate-700 rounded">
           <X size={18} />
         </button>

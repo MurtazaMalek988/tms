@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
-import { GraduationCap, Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, LogIn, ArrowLeft } from 'lucide-react';
+import { BrandHeader, SCHOOL_NAME } from '../components/AppLogo';
 import { ADMIN_LOGIN, TEACHER_LOGIN, getLoginPath } from '../utils/authRoutes';
 
 const portalConfig = {
@@ -73,15 +74,7 @@ export default function Login({ expectedRole = 'principal' }) {
   return (
     <div className={`min-h-screen bg-gradient-to-br ${config.gradient} flex items-center justify-center p-4`}>
       <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <div className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 shadow-lg ${
-            expectedRole === 'principal' ? 'bg-blue-600' : 'bg-emerald-600'
-          }`}>
-            <GraduationCap size={32} className="text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-white">TAMS</h1>
-          <p className="text-slate-300 mt-1 text-sm">{config.title}</p>
-        </div>
+        <BrandHeader subtitle={config.title} className="mb-8" />
 
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-xl font-semibold text-gray-800 mb-6">{config.subtitle}</h2>
@@ -152,7 +145,7 @@ export default function Login({ expectedRole = 'principal' }) {
         </div>
 
         <p className="text-center text-slate-400 text-xs mt-6">
-          &copy; {new Date().getFullYear()} TAMS – University Project
+          &copy; {new Date().getFullYear()} {SCHOOL_NAME}
         </p>
       </div>
     </div>

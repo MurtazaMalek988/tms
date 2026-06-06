@@ -2,8 +2,9 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  CalendarCheck, LogOut, GraduationCap, X, Clock,
+  CalendarCheck, LogOut, X, Clock,
 } from 'lucide-react';
+import { SidebarBrand } from './AppLogo';
 import { TEACHER_LOGIN } from '../utils/authRoutes';
 
 const teacherNav = [
@@ -23,16 +24,8 @@ export default function TeacherSidebar({ onClose }) {
   return (
     <div className="h-full bg-gradient-to-b from-green-600 to-emerald-700 text-white flex flex-col">
       {/* Logo */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-green-500/30">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center">
-            <GraduationCap size={20} className="text-white" />
-          </div>
-          <div>
-            <span className="font-bold text-lg text-white">TAMS</span>
-            <p className="text-xs text-green-200">Teacher Portal</p>
-          </div>
-        </div>
+      <div className="min-h-16 flex items-center justify-between px-4 py-3 border-b border-green-500/30">
+        <SidebarBrand panelLabel="Teacher Portal" />
         <button onClick={onClose} className="lg:hidden p-1 hover:bg-green-500/30 rounded">
           <X size={18} />
         </button>
