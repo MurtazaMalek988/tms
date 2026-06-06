@@ -25,7 +25,7 @@ const portalConfig = {
     accent: 'emerald',
     dashboard: '/teacher',
     credentials: (
-      <p className="text-xs text-emerald-600 mt-1">Use the username and password provided by your administrator.</p>
+      <p className="text-xs text-emerald-600 mt-1">Use the username and password provided by principal.</p>
     ),
     otherLogin: { to: ADMIN_LOGIN, label: 'Admin login' },
   },
