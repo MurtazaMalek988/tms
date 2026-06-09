@@ -47,16 +47,6 @@ services:
     networks:
       - tams_network
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: tams_frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    networks:
-      - tams_network
 
 volumes:
   uploads_data:
