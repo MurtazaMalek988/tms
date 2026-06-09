@@ -17,7 +17,6 @@ async function updateSettings(req, res, next) {
       school_latitude,
       school_longitude,
       allowed_radius,
-      short_leave_cutoff_time,
       late_cutoff_time,
       absence_processing_time,
     } = req.body;
@@ -28,9 +27,8 @@ async function updateSettings(req, res, next) {
          school_latitude = COALESCE($2, school_latitude),
          school_longitude = COALESCE($3, school_longitude),
          allowed_radius = COALESCE($4, allowed_radius),
-         short_leave_cutoff_time = COALESCE($5, short_leave_cutoff_time),
-         late_cutoff_time = COALESCE($6, late_cutoff_time),
-         absence_processing_time = COALESCE($7, absence_processing_time),
+         late_cutoff_time = COALESCE($5, late_cutoff_time),
+         absence_processing_time = COALESCE($6, absence_processing_time),
          updated_at = NOW()
        WHERE id = 1
        RETURNING *`,
@@ -39,7 +37,6 @@ async function updateSettings(req, res, next) {
         school_latitude != null ? parseFloat(school_latitude) : null,
         school_longitude != null ? parseFloat(school_longitude) : null,
         allowed_radius != null ? parseInt(allowed_radius) : null,
-        short_leave_cutoff_time,
         late_cutoff_time,
         absence_processing_time,
       ]

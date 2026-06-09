@@ -4,23 +4,17 @@ const multer = require('multer');
 const path = require('path');
 const { authenticate, requirePrincipal } = require('../middleware/auth');
 const {
-  getTeachers,
-  getTeacher,
-  createTeacher,
-  updateTeacher,
-  deleteTeacher,
-  resetPassword,
-  importTeachers,
+  getTeachers, getTeacher, createTeacher, updateTeacher, deleteTeacher,
+  resetPassword, importTeachers,
 } = require('../controllers/teacher.controller');
 const {
-  getAttendanceList,
-  updateAttendance,
+  getAttendanceList, getAttendanceLogs, updateAttendance,
 } = require('../controllers/attendance.controller');
 const { getDashboardStats } = require('../controllers/principal.controller');
 const { getSettings, updateSettings } = require('../controllers/settings.controller');
 const { getDailyReport, getWeeklyReport, getMonthlyReport, exportExcel, exportPDF } = require('../controllers/reports.controller');
+const { getHolidays, createHoliday, updateHoliday, deleteHoliday } = require('../controllers/holiday.controller');
 
-// Excel import for teachers
 const excelStorage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, path.join(__dirname, '../../uploads/excel')),
   filename: (req, file, cb) => cb(null, `import_${Date.now()}${path.extname(file.originalname)}`),
@@ -35,7 +29,6 @@ const excelUpload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 });
 
-// All admin routes require authentication and principal role
 router.use(authenticate, requirePrincipal);
 
 // Dashboard
@@ -52,7 +45,14 @@ router.post('/teachers/import/excel', excelUpload.single('file'), importTeachers
 
 // Attendance Management
 router.get('/attendance', getAttendanceList);
+router.get('/attendance/logs', getAttendanceLogs);
 router.put('/attendance/:id', updateAttendance);
+
+// Holidays
+router.get('/holidays', getHolidays);
+router.post('/holidays', createHoliday);
+router.put('/holidays/:id', updateHoliday);
+router.delete('/holidays/:id', deleteHoliday);
 
 // Settings
 router.get('/settings', getSettings);

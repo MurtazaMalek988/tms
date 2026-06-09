@@ -2,29 +2,32 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import api from '../../api';
 import toast from 'react-hot-toast';
-import { LogIn, LogOut, Stethoscope, MapPin, Clock, CheckCircle2, XCircle, AlertCircle, Upload } from 'lucide-react';
+import { LogIn, LogOut, Stethoscope, MapPin, Clock, CheckCircle2, XCircle, AlertCircle, Upload, Sun, Umbrella } from 'lucide-react';
 import { format } from 'date-fns';
 import useGeolocation from '../../hooks/useGeolocation';
 import { getPremisesStatus } from '../../utils/geofence';
 
 const STATUS_CONFIG = {
-  not_marked: { label: 'Not Marked', color: 'bg-gray-100 text-gray-600', icon: AlertCircle },
-  present: { label: 'Present', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-  absent: { label: 'Absent', color: 'bg-red-100 text-red-700', icon: XCircle },
-  short_leave: { label: 'Short Leave', color: 'bg-yellow-100 text-yellow-700', icon: AlertCircle },
-  medical_leave: { label: 'Medical Leave', color: 'bg-blue-100 text-blue-700', icon: Stethoscope },
+  not_marked_yet: { label: 'Not Marked Yet', color: 'bg-gray-100 text-gray-600', icon: AlertCircle },
+  present:        { label: 'Present',         color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
+  absent:         { label: 'Absent',           color: 'bg-red-100 text-red-700',    icon: XCircle },
+  medical_leave:  { label: 'Medical Leave',    color: 'bg-blue-100 text-blue-700',  icon: Stethoscope },
+  holiday:        { label: 'Holiday',          color: 'bg-purple-100 text-purple-700', icon: Umbrella },
+  day_off:        { label: 'Day Off',          color: 'bg-indigo-100 text-indigo-700', icon: Sun },
 };
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
   const [attendance, setAttendance] = useState(null);
+  const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [medLeaveOpen, setMedLeaveOpen] = useState(false);
-  const [medForm, setMedForm] = useState({ remarks: '', certificate: null });
+  const [medForm, setMedForm] = useState({ remarks: '', certificate: null, start_date: '', end_date: '' });
   const [geofence, setGeofence] = useState(null);
   const { loc, locError, locLoading, getLocation, useTestLocation } = useGeolocation();
 
+  const today = format(new Date(), 'yyyy-MM-dd');
   const premises = getPremisesStatus(loc, geofence);
   const locationRequired = geofence?.enabled;
   const canMarkAttendanceHere = !locationRequired || (loc && premises.withinPremises);
@@ -33,6 +36,7 @@ export default function TeacherDashboard() {
     try {
       const res = await api.get('/teacher/attendance/today');
       setAttendance(res.data.attendance);
+      setLogs(res.data.logs || []);
       setGeofence(res.data.geofence);
     } catch {
       toast.error('Failed to load attendance status');
@@ -42,10 +46,7 @@ export default function TeacherDashboard() {
   }, []);
 
   useEffect(() => { fetchStatus(); }, [fetchStatus]);
-
-  useEffect(() => {
-    getLocation().catch(() => {});
-  }, [getLocation]);
+  useEffect(() => { getLocation().catch(() => {}); }, [getLocation]);
 
   async function handleCheckIn() {
     setActionLoading(true);
@@ -82,12 +83,14 @@ export default function TeacherDashboard() {
       const formData = new FormData();
       if (medForm.remarks) formData.append('remarks', medForm.remarks);
       if (medForm.certificate) formData.append('certificate', medForm.certificate);
-      await api.post('/teacher/medical-leave', formData, {
+      if (medForm.start_date) formData.append('start_date', medForm.start_date);
+      if (medForm.end_date) formData.append('end_date', medForm.end_date);
+      const res = await api.post('/teacher/medical-leave', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      toast.success('Medical leave applied successfully!');
+      toast.success(res.data.message);
       setMedLeaveOpen(false);
-      setMedForm({ remarks: '', certificate: null });
+      setMedForm({ remarks: '', certificate: null, start_date: '', end_date: '' });
       fetchStatus();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to apply medical leave');
@@ -96,13 +99,16 @@ export default function TeacherDashboard() {
     }
   }
 
-  const status = attendance?.status || 'not_marked';
-  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.not_marked;
+  const status = attendance?.status || 'not_marked_yet';
+  const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.not_marked_yet;
   const StatusIcon = cfg.icon;
 
-  const canCheckIn = !attendance?.check_in_time && status !== 'medical_leave';
-  const canCheckOut = !!attendance?.check_in_time && !attendance?.check_out_time;
-  const canMedLeave = !attendance?.check_in_time && status !== 'medical_leave';
+  // Multiple check-in/out: derive ability from last log action
+  const lastAction = logs.length > 0 ? logs[logs.length - 1].action_type : null;
+  const isRestrictedDay = ['day_off', 'holiday', 'medical_leave'].includes(status);
+  const canCheckIn  = !isRestrictedDay && lastAction !== 'check_in';
+  const canCheckOut = lastAction === 'check_in';
+  const canMedLeave = !attendance?.check_in_time && !['medical_leave', 'day_off', 'holiday'].includes(status);
 
   if (loading) {
     return (
@@ -117,7 +123,7 @@ export default function TeacherDashboard() {
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Good day, {user?.name?.split(' ')[0]}!</h1>
-        <p className="text-gray-500 mt-1">{format(new Date(), 'EEEE, dd MMMM yyyy')}</p>
+        <p className="text-gray-500 mt-1">{format(new Date(), 'EEEE, dd/MM/yyyy')}</p>
       </div>
 
       {/* Status card */}
@@ -126,31 +132,48 @@ export default function TeacherDashboard() {
         <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold ${cfg.color}`}>
           <StatusIcon size={16} />
           {cfg.label}
+          {status === 'holiday' && attendance?.holiday_name && ` — ${attendance.holiday_name}`}
         </div>
 
         {attendance?.check_in_time && (
           <div className="mt-4 grid grid-cols-2 gap-3">
             <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs text-gray-500 flex items-center gap-1">
-                <Clock size={12} /> Check In
-              </p>
+              <p className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> First Check In</p>
               <p className="text-sm font-semibold text-gray-800 mt-1">
-                {format(new Date(attendance.check_in_time), 'hh:mm a')}
+                {format(new Date(attendance.check_in_time), 'HH:mm')}
               </p>
             </div>
             {attendance.check_out_time && (
               <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 flex items-center gap-1">
-                  <Clock size={12} /> Check Out
-                </p>
+                <p className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> Last Check Out</p>
                 <p className="text-sm font-semibold text-gray-800 mt-1">
-                  {format(new Date(attendance.check_out_time), 'hh:mm a')}
+                  {format(new Date(attendance.check_out_time), 'HH:mm')}
                 </p>
               </div>
             )}
           </div>
         )}
       </div>
+
+      {/* Movement log */}
+      {logs.length > 0 && (
+        <div className="card">
+          <h2 className="text-sm font-medium text-gray-500 mb-3">Today's Movements</h2>
+          <div className="space-y-2">
+            {logs.map((log, i) => (
+              <div key={i} className={`flex items-center gap-3 text-sm px-3 py-2 rounded-lg ${log.action_type === 'check_in' ? 'bg-green-50' : 'bg-orange-50'}`}>
+                {log.action_type === 'check_in'
+                  ? <LogIn size={14} className="text-green-600 flex-shrink-0" />
+                  : <LogOut size={14} className="text-orange-600 flex-shrink-0" />}
+                <span className={`font-medium ${log.action_type === 'check_in' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {log.action_type === 'check_in' ? 'Check In' : 'Check Out'}
+                </span>
+                <span className="text-gray-500 ml-auto">{format(new Date(log.timestamp), 'HH:mm')}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="card space-y-3">
@@ -165,10 +188,7 @@ export default function TeacherDashboard() {
           {actionLoading || locLoading ? (
             <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <>
-              <LogIn size={20} />
-              Check In
-            </>
+            <><LogIn size={20} /> Check In</>
           )}
         </button>
 
@@ -181,10 +201,7 @@ export default function TeacherDashboard() {
           {actionLoading || locLoading ? (
             <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
           ) : (
-            <>
-              <LogOut size={20} />
-              Check Out
-            </>
+            <><LogOut size={20} /> Check Out</>
           )}
         </button>
 
@@ -210,13 +227,10 @@ export default function TeacherDashboard() {
       }`}>
         <div className="flex items-start gap-2">
           <MapPin size={14} className={`mt-0.5 flex-shrink-0 ${
-            locError
-              ? 'text-red-600'
-              : premises.enabled && loc && premises.withinPremises
-                ? 'text-green-600'
-                : premises.enabled && loc && !premises.withinPremises
-                  ? 'text-orange-600'
-                  : 'text-yellow-600'
+            locError ? 'text-red-600'
+              : premises.enabled && loc && premises.withinPremises ? 'text-green-600'
+              : premises.enabled && loc && !premises.withinPremises ? 'text-orange-600'
+              : 'text-yellow-600'
           }`} />
           <div className="flex-1 text-xs">
             {geofence?.enabled && (
@@ -224,70 +238,35 @@ export default function TeacherDashboard() {
                 School: {geofence.school_name} · Allowed radius: {geofence.allowed_radius}m
               </p>
             )}
-
             {loc ? (
-              <div>
-                {geofence?.enabled ? (
-                  premises.withinPremises ? (
-                    <>
-                      <p className="font-semibold text-green-700">✓ Inside school premises</p>
-                      <p className="text-green-600 mt-0.5">
-                        You are within {geofence.allowed_radius}m of the school ({premises.distance}m away). You can check in/out.
-                      </p>
-                    </>
-                  ) : (
-                    <>
-                      <p className="font-semibold text-orange-700">✗ Outside school premises</p>
-                      <p className="text-orange-600 mt-0.5">
-                        You are about {premises.distance}m from school. Move within {geofence.allowed_radius}m to mark attendance.
-                      </p>
-                    </>
-                  )
+              geofence?.enabled ? (
+                premises.withinPremises ? (
+                  <p className="font-semibold text-green-700">✓ Inside school premises ({premises.distance}m away)</p>
                 ) : (
-                  <>
-                    <p className="font-semibold text-yellow-700">Location acquired</p>
-                    <p className="text-yellow-600 mt-0.5">
-                      School geofence is not configured yet. Ask admin to set school location in Settings.
-                    </p>
-                  </>
-                )}
-              </div>
+                  <p className="font-semibold text-orange-700">✗ Outside school premises ({premises.distance}m away)</p>
+                )
+              ) : (
+                <p className="font-semibold text-yellow-700">Location acquired — geofence not configured</p>
+              )
             ) : locError ? (
               <div>
                 <p className="font-semibold text-red-700">✗ Location Error</p>
                 <p className="text-red-600 mt-1">{locError}</p>
-                <div className="mt-2 space-y-1">
-                  <p className="text-red-600 font-medium">How to fix:</p>
-                  <ul className="text-red-600 list-disc pl-4 space-y-0.5">
-                    <li>Click the lock icon in the address bar and allow Location for this site</li>
-                    <li>On Windows, turn on Location in Settings → Privacy &amp; security → Location</li>
-                    <li>Retry after a few seconds — desktop browsers often use Wi‑Fi, not GPS</li>
-                  </ul>
-                </div>
                 <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => getLocation().catch(() => {})}
-                    disabled={locLoading}
-                    className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50"
-                  >
+                  <button onClick={() => getLocation().catch(() => {})} disabled={locLoading}
+                    className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 disabled:opacity-50">
                     {locLoading ? 'Retrying...' : 'Retry'}
                   </button>
                   {import.meta.env.DEV && (
-                    <button
-                      onClick={useTestLocation}
-                      className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                      title="Dev only: bypass geolocation when school coords are 0,0"
-                    >
+                    <button onClick={useTestLocation}
+                      className="px-2 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700">
                       Use Test Location
                     </button>
                   )}
                 </div>
               </div>
             ) : (
-              <div>
-                <p className="font-semibold text-yellow-700">⊙ Requesting location...</p>
-                <p className="text-yellow-600 mt-0.5">Please allow browser to access your location when prompted</p>
-              </div>
+              <p className="font-semibold text-yellow-700">⊙ Requesting location...</p>
             )}
           </div>
         </div>
@@ -299,6 +278,26 @@ export default function TeacherDashboard() {
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Apply Medical Leave</h3>
             <form onSubmit={handleMedicalLeave} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="label">Start Date</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={medForm.start_date || today}
+                    onChange={(e) => setMedForm({ ...medForm, start_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="label">End Date</label>
+                  <input
+                    type="date"
+                    className="input"
+                    value={medForm.end_date || today}
+                    onChange={(e) => setMedForm({ ...medForm, end_date: e.target.value })}
+                  />
+                </div>
+              </div>
               <div>
                 <label className="label">Reason / Remarks</label>
                 <textarea
@@ -326,15 +325,15 @@ export default function TeacherDashboard() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => { setMedLeaveOpen(false); setMedForm({ remarks: '', certificate: null }); }}
+                  onClick={() => { setMedLeaveOpen(false); setMedForm({ remarks: '', certificate: null, start_date: '', end_date: '' }); }}
                   className="btn-secondary flex-1"
                 >
                   Cancel
                 </button>
                 <button type="submit" className="btn-primary flex-1" disabled={actionLoading}>
-                  {actionLoading ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  ) : 'Apply Leave'}
+                  {actionLoading
+                    ? <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    : 'Apply Leave'}
                 </button>
               </div>
             </form>

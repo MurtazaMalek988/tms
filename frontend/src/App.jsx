@@ -12,6 +12,7 @@ import Teachers from './pages/principal/Teachers';
 import Attendance from './pages/principal/Attendance';
 import Reports from './pages/principal/Reports';
 import Settings from './pages/principal/Settings';
+import Holidays from './pages/principal/Holidays';
 
 function AdminPathRedirect() {
   const { pathname, search } = useLocation();
@@ -54,6 +55,7 @@ export default function App() {
             <Route path="attendance" element={<Attendance />} />
             <Route path="reports" element={<Reports />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="holidays" element={<Holidays />} />
           </Route>
 
           <Route path="/principal/*" element={<AdminPathRedirect />} />

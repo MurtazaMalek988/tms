@@ -8,8 +8,9 @@ const fs = require('fs');
 
 const { initializeDatabase } = require('./config/database');
 const { seedDatabase } = require('./utils/seed');
+const { runMigrations } = require('./db/runMigrations');
 const errorHandler = require('./middleware/errorHandler');
-const { markAbsentTeachers } = require('./controllers/attendance.controller');
+const { markAbsentTeachers, markDayOffOrHoliday } = require('./controllers/attendance.controller');
 
 const authRoutes = require('./routes/auth.routes');
 const teacherRoutes = require('./routes/teacher-routes');
@@ -39,7 +40,13 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
 
-// Cron: mark absent teachers at 5 PM daily
+// Cron: mark day-off / holiday records at midnight
+cron.schedule('0 0 * * *', async () => {
+  console.log('[CRON] Running day-off/holiday marking...');
+  try { await markDayOffOrHoliday(); } catch (e) { console.error('[CRON] Error:', e.message); }
+});
+
+// Cron: mark absent teachers at configured absence_processing_time (default 17:00)
 cron.schedule('0 17 * * *', async () => {
   console.log('[CRON] Running auto-absent marking...');
   try { await markAbsentTeachers(); } catch (e) { console.error('[CRON] Error:', e.message); }
@@ -47,6 +54,7 @@ cron.schedule('0 17 * * *', async () => {
 
 async function start() {
   await initializeDatabase();
+  await runMigrations();
   await seedDatabase();
   app.listen(PORT, '0.0.0.0', () => console.log(`TAMS Backend running on port ${PORT}`));
 }

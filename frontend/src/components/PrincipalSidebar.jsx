@@ -3,17 +3,18 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   LayoutDashboard, Users, CalendarCheck, BarChart2,
-  Settings, LogOut, X,
+  Settings, LogOut, X, Umbrella,
 } from 'lucide-react';
 import { SidebarBrand } from './AppLogo';
 import { ADMIN_LOGIN } from '../utils/authRoutes';
 
 const adminNav = [
-  { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/admin/teachers', label: 'Teachers', icon: Users },
+  { to: '/admin',            label: 'Dashboard',  icon: LayoutDashboard, end: true },
+  { to: '/admin/teachers',   label: 'Teachers',   icon: Users },
   { to: '/admin/attendance', label: 'Attendance', icon: CalendarCheck },
-  { to: '/admin/reports', label: 'Reports', icon: BarChart2 },
-  { to: '/admin/settings', label: 'Settings', icon: Settings },
+  { to: '/admin/holidays',   label: 'Holidays',   icon: Umbrella },
+  { to: '/admin/reports',    label: 'Reports',    icon: BarChart2 },
+  { to: '/admin/settings',   label: 'Settings',   icon: Settings },
 ];
 
 export default function PrincipalSidebar({ onClose }) {

@@ -3,7 +3,13 @@ const ExcelJS = require('exceljs');
 const PDFDocument = require('pdfkit');
 
 function formatStatus(s) {
-  return { present: 'Present', absent: 'Absent', short_leave: 'Short Leave', medical_leave: 'Medical Leave' }[s] || s;
+  return {
+    present: 'Present',
+    absent: 'Absent',
+    medical_leave: 'Medical Leave',
+    holiday: 'Holiday',
+    day_off: 'Day Off',
+  }[s] || s;
 }
 
 function formatTime(dt) {
@@ -31,7 +37,7 @@ async function getDailyReport(req, res, next) {
 
     const summary = rows.reduce(
       (acc, r) => { acc[r.status] = (acc[r.status] || 0) + 1; return acc; },
-      { present: 0, absent: 0, short_leave: 0, medical_leave: 0 }
+      { present: 0, absent: 0, medical_leave: 0, holiday: 0, day_off: 0 }
     );
 
     res.json({ success: true, date, records: rows, summary });
