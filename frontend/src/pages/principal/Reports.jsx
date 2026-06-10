@@ -70,8 +70,7 @@ export default function Reports() {
         };
       }
 
-      const endpoint = `/reports/export/${format}`;
-      const res = await api.get(`/admin/${endpoint}`, {
+      const res = await api.get(`/admin/reports/export-${format}`, {
         params,
         responseType: 'blob',
       });
