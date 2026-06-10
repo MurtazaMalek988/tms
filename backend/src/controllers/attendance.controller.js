@@ -79,7 +79,6 @@ async function checkIn(req, res, next) {
        VALUES ($1, $2, $3, 'present', $4, $5)
        ON CONFLICT (teacher_id, attendance_date) DO UPDATE SET
          check_in_time = CASE WHEN attendance.check_in_time IS NULL THEN $3 ELSE attendance.check_in_time END,
-         check_out_time = NULL,
          status = 'present',
          check_in_latitude = CASE WHEN attendance.check_in_time IS NULL THEN $4 ELSE attendance.check_in_latitude END,
          check_in_longitude = CASE WHEN attendance.check_in_time IS NULL THEN $5 ELSE attendance.check_in_longitude END,

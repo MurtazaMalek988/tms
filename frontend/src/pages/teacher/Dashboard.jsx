@@ -143,19 +143,14 @@ export default function TeacherDashboard() {
                 {format(new Date(attendance.check_in_time), 'HH:mm')}
               </p>
             </div>
-            {/* Only show last check-out if teacher is currently out (last action was check_out) */}
-            {attendance.check_out_time && lastAction !== 'check_in' && (
-              <div className="bg-gray-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> Last Check Out</p>
+            {attendance.check_out_time && (
+              <div className={`rounded-lg p-3 ${lastAction === 'check_in' ? 'bg-gray-50 opacity-50' : 'bg-gray-50'}`}>
+                <p className="text-xs text-gray-500 flex items-center gap-1">
+                  <Clock size={12} /> Last Check Out {lastAction === 'check_in' && '(re-entered)'}
+                </p>
                 <p className="text-sm font-semibold text-gray-800 mt-1">
                   {format(new Date(attendance.check_out_time), 'HH:mm')}
                 </p>
-              </div>
-            )}
-            {lastAction === 'check_in' && logs.length > 1 && (
-              <div className="bg-green-50 rounded-lg p-3">
-                <p className="text-xs text-gray-500 flex items-center gap-1"><Clock size={12} /> Currently</p>
-                <p className="text-sm font-semibold text-green-700 mt-1">Checked In</p>
               </div>
             )}
           </div>
