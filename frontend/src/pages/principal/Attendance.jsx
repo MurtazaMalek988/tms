@@ -156,14 +156,19 @@ export default function Attendance() {
       {/* Filters */}
       <div className="card p-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="flex items-center gap-2 flex-1">
-            <Filter size={15} className="text-gray-400 flex-shrink-0" />
-            <input
-              type="date"
-              className="input text-sm"
-              value={filters.date}
-              onChange={(e) => handleFilterChange('date', e.target.value)}
-            />
+          <div className="flex flex-col gap-1 flex-1">
+            <div className="flex items-center gap-2">
+              <Filter size={15} className="text-gray-400 flex-shrink-0" />
+              <input
+                type="date"
+                className="input text-sm flex-1"
+                value={filters.date}
+                onChange={(e) => handleFilterChange('date', e.target.value)}
+              />
+            </div>
+            {filters.date && (
+              <p className="text-xs text-gray-400 pl-5">{formatDate(filters.date)}</p>
+            )}
           </div>
           <select
             className="input text-sm flex-1"

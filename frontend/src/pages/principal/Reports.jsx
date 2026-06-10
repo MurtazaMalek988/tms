@@ -5,13 +5,21 @@ import { BarChart2, FileSpreadsheet, FileText, Download, Search } from 'lucide-r
 import { format, startOfWeek, endOfWeek } from 'date-fns';
 
 const STATUS_LABELS = {
-  present: 'Present', absent: 'Absent',
-  short_leave: 'Short Leave', medical_leave: 'Medical Leave',
+  present:        'Present',
+  absent:         'Absent',
+  medical_leave:  'Medical Leave',
+  holiday:        'Holiday',
+  day_off:        'Day Off',
+  not_marked_yet: 'Not Marked Yet',
 };
 
 const STATUS_CLASSES = {
-  present: 'badge-present', absent: 'badge-absent',
-  short_leave: 'badge-short_leave', medical_leave: 'badge-medical_leave',
+  present:        'badge-present',
+  absent:         'badge-absent',
+  medical_leave:  'badge-medical_leave',
+  holiday:        'px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700',
+  day_off:        'px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700',
+  not_marked_yet: 'px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500',
 };
 
 export default function Reports() {
@@ -121,6 +129,7 @@ export default function Reports() {
               <>
                 <label className="label">{reportType === 'weekly' ? 'Week ending' : 'Date'}</label>
                 <input type="date" className="input" value={date} max={today} onChange={(e) => setDate(e.target.value)} />
+                {date && <p className="text-xs text-gray-400 mt-1">{date.split('-').reverse().join('/')}</p>}
               </>
             )}
           </div>
@@ -183,7 +192,7 @@ export default function Reports() {
                 <tbody>
                   {records.map((r, i) => (
                     <tr key={i} className="border-b border-gray-50 hover:bg-gray-50">
-                      <td className="py-2.5 px-4 text-gray-600">{String(r.attendance_date).split('T')[0]}</td>
+                      <td className="py-2.5 px-4 text-gray-600">{String(r.attendance_date).split('T')[0].split('-').reverse().join('/')}</td>
                       <td className="py-2.5 px-4 font-medium text-gray-800">{r.teacher_name}</td>
                       <td className="py-2.5 px-4">
                         <span className={STATUS_CLASSES[r.status] || 'badge-not_marked'}>
@@ -191,10 +200,10 @@ export default function Reports() {
                         </span>
                       </td>
                       <td className="py-2.5 px-4 text-gray-600">
-                        {r.check_in_time ? format(new Date(r.check_in_time), 'hh:mm a') : '-'}
+                        {r.check_in_time ? format(new Date(r.check_in_time), 'HH:mm') : '-'}
                       </td>
                       <td className="py-2.5 px-4 text-gray-600">
-                        {r.check_out_time ? format(new Date(r.check_out_time), 'hh:mm a') : '-'}
+                        {r.check_out_time ? format(new Date(r.check_out_time), 'HH:mm') : '-'}
                       </td>
                       <td className="py-2.5 px-4 text-gray-500 max-w-[150px] truncate">{r.remarks || '-'}</td>
                     </tr>
