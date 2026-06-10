@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
-import { Users, CheckCircle2, XCircle, Stethoscope, AlertCircle, RefreshCw, Sun, Umbrella } from 'lucide-react';
+import { Users, CheckCircle2, XCircle, Stethoscope, AlertCircle, RefreshCw, Sun, Umbrella, Timer } from 'lucide-react';
 import { format } from 'date-fns';
 
 function StatCard({ label, value, icon: Icon, color, bg }) {
@@ -24,6 +24,7 @@ const STATUS_BADGE = {
   medical_leave: <span className="badge-medical_leave">Medical Leave</span>,
   holiday:       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Holiday</span>,
   day_off:       <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">Day Off</span>,
+  short_leave:   <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">Short Leave</span>,
 };
 
 export default function PrincipalDashboard() {
@@ -73,6 +74,7 @@ export default function PrincipalDashboard() {
         <StatCard label="Present"        value={stats?.present      ?? 0} icon={CheckCircle2}  color="text-green-600"   bg="bg-green-100" />
         <StatCard label="Absent"         value={stats?.absent       ?? 0} icon={XCircle}       color="text-red-600"     bg="bg-red-100" />
         <StatCard label="Medical Leave"  value={stats?.medicalLeave ?? 0} icon={Stethoscope}   color="text-blue-600"    bg="bg-blue-100" />
+        <StatCard label="Short Leave"    value={stats?.shortLeave   ?? 0} icon={Timer}         color="text-amber-600"   bg="bg-amber-100" />
         <StatCard label="Holiday"        value={stats?.holiday      ?? 0} icon={Umbrella}      color="text-purple-600"  bg="bg-purple-100" />
         <StatCard label="Day Off"        value={stats?.dayOff       ?? 0} icon={Sun}           color="text-indigo-600"  bg="bg-indigo-100" />
         <StatCard label="Not Marked Yet" value={stats?.notMarked    ?? 0} icon={AlertCircle}   color="text-gray-500"    bg="bg-gray-100" />

@@ -23,7 +23,7 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [medLeaveOpen, setMedLeaveOpen] = useState(false);
-  const [medForm, setMedForm] = useState({ remarks: '', certificate: null, start_date: '', end_date: '' });
+  const [medForm, setMedForm] = useState({ remarks: '', certificate: null, start_date: today, end_date: today });
   const [geofence, setGeofence] = useState(null);
   const { loc, locError, locLoading, getLocation, useTestLocation } = useGeolocation();
 
@@ -78,19 +78,29 @@ export default function TeacherDashboard() {
 
   async function handleMedicalLeave(e) {
     e.preventDefault();
+    const startD = medForm.start_date || today;
+    const endD = medForm.end_date || today;
+    if (startD < today || endD < today) {
+      toast.error('Medical Leave cannot be applied for past dates.');
+      return;
+    }
+    if (startD > endD) {
+      toast.error('Start date cannot be after end date.');
+      return;
+    }
     setActionLoading(true);
     try {
       const formData = new FormData();
       if (medForm.remarks) formData.append('remarks', medForm.remarks);
       if (medForm.certificate) formData.append('certificate', medForm.certificate);
-      if (medForm.start_date) formData.append('start_date', medForm.start_date);
-      if (medForm.end_date) formData.append('end_date', medForm.end_date);
+      formData.append('start_date', startD);
+      formData.append('end_date', endD);
       const res = await api.post('/teacher/medical-leave', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast.success(res.data.message);
       setMedLeaveOpen(false);
-      setMedForm({ remarks: '', certificate: null, start_date: '', end_date: '' });
+      setMedForm({ remarks: '', certificate: null, start_date: today, end_date: today });
       fetchStatus();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to apply medical leave');
@@ -286,20 +296,29 @@ export default function TeacherDashboard() {
                   <input
                     type="date"
                     className="input"
-                    value={medForm.start_date || today}
+                    min={today}
+                    value={medForm.start_date}
                     onChange={(e) => setMedForm({ ...medForm, start_date: e.target.value })}
                   />
+                  <p className="text-xs text-gray-400 mt-1">{medForm.start_date.split('-').reverse().join('/')}</p>
                 </div>
                 <div>
                   <label className="label">End Date</label>
                   <input
                     type="date"
                     className="input"
-                    value={medForm.end_date || today}
+                    min={medForm.start_date || today}
+                    value={medForm.end_date}
                     onChange={(e) => setMedForm({ ...medForm, end_date: e.target.value })}
                   />
+                  <p className="text-xs text-gray-400 mt-1">{medForm.end_date.split('-').reverse().join('/')}</p>
                 </div>
               </div>
+              {medForm.start_date && medForm.end_date && (
+                <p className="text-xs font-medium text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                  Duration: {Math.max(1, Math.floor((new Date(medForm.end_date) - new Date(medForm.start_date)) / 86400000) + 1)} day(s)
+                </p>
+              )}
               <div>
                 <label className="label">Reason / Remarks</label>
                 <textarea

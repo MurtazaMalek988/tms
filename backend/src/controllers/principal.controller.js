@@ -12,7 +12,8 @@ async function getDashboardStats(req, res, next) {
            COUNT(*) FILTER (WHERE status = 'absent')        AS absent,
            COUNT(*) FILTER (WHERE status = 'medical_leave') AS medical_leave,
            COUNT(*) FILTER (WHERE status = 'holiday')       AS holiday,
-           COUNT(*) FILTER (WHERE status = 'day_off')       AS day_off
+           COUNT(*) FILTER (WHERE status = 'day_off')       AS day_off,
+           COUNT(*) FILTER (WHERE status = 'short_leave')   AS short_leave
          FROM attendance WHERE attendance_date = $1`,
         [today]
       ),
@@ -44,6 +45,7 @@ async function getDashboardStats(req, res, next) {
         medicalLeave:  parseInt(stats.medical_leave) || 0,
         holiday:       parseInt(stats.holiday)       || 0,
         dayOff:        parseInt(stats.day_off)       || 0,
+        shortLeave:    parseInt(stats.short_leave)   || 0,
         notMarked:     parseInt(notMarkedResult.rows[0].count) || 0,
         date: today,
       },

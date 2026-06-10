@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const { markAbsentTeachers } = require('./attendance.controller');
 
 async function getSettings(req, res, next) {
   try {
@@ -42,7 +43,27 @@ async function updateSettings(req, res, next) {
       ]
     );
 
-    res.json({ success: true, settings: result.rows[0] });
+    const saved = result.rows[0];
+
+    // If absence_processing_time changed and it has already passed today, mark absent now
+    if (absence_processing_time) {
+      const [h, m] = absence_processing_time.split(':').map(Number);
+      const now = new Date();
+      const nowMinutes = now.getHours() * 60 + now.getMinutes();
+      const cutoffMinutes = h * 60 + m;
+      if (nowMinutes >= cutoffMinutes) {
+        setImmediate(async () => {
+          try {
+            console.log('[SETTINGS] Cutoff time already passed — running markAbsentTeachers immediately');
+            await markAbsentTeachers();
+          } catch (e) {
+            console.error('[SETTINGS] Error running markAbsentTeachers:', e.message);
+          }
+        });
+      }
+    }
+
+    res.json({ success: true, settings: saved });
   } catch (err) {
     next(err);
   }

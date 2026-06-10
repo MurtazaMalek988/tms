@@ -10,6 +10,7 @@ const STATUS_LABELS = {
   medical_leave:  'Medical Leave',
   holiday:        'Holiday',
   day_off:        'Day Off',
+  short_leave:    'Short Leave',
   not_marked_yet: 'Not Marked Yet',
 };
 
@@ -19,6 +20,7 @@ const STATUS_CLASSES = {
   medical_leave:  'badge-medical_leave',
   holiday:        'px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700',
   day_off:        'px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700',
+  short_leave:    'px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700',
   not_marked_yet: 'px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500',
 };
 

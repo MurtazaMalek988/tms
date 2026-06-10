@@ -9,7 +9,6 @@ const DEFAULT = {
   school_latitude: '',
   school_longitude: '',
   allowed_radius: 100,
-  short_leave_cutoff_time: '13:30',
   late_cutoff_time: '09:00',
   absence_processing_time: '17:00',
 };
@@ -35,7 +34,6 @@ export default function Settings() {
           school_latitude: s.school_latitude != null ? String(s.school_latitude) : '',
           school_longitude: s.school_longitude != null ? String(s.school_longitude) : '',
           allowed_radius: s.allowed_radius || 100,
-          short_leave_cutoff_time: s.short_leave_cutoff_time?.slice(0, 5) || '13:30',
           late_cutoff_time: s.late_cutoff_time?.slice(0, 5) || '09:00',
           absence_processing_time: s.absence_processing_time?.slice(0, 5) || '17:00',
         });
@@ -75,7 +73,6 @@ export default function Settings() {
         school_latitude: form.school_latitude ? parseFloat(form.school_latitude) : 0,
         school_longitude: form.school_longitude ? parseFloat(form.school_longitude) : 0,
         allowed_radius: parseInt(form.allowed_radius),
-        short_leave_cutoff_time: form.short_leave_cutoff_time + ':00',
         late_cutoff_time: form.late_cutoff_time + ':00',
         absence_processing_time: form.absence_processing_time + ':00',
       });
@@ -203,21 +200,16 @@ export default function Settings() {
             <Clock size={18} />
             Attendance Time Rules
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="label">Short Leave Cutoff</label>
-              <input type="time" className="input" value={form.short_leave_cutoff_time} onChange={(e) => set('short_leave_cutoff_time', e.target.value)} />
-              <p className="text-xs text-gray-400 mt-1">Checkout before this = Short Leave</p>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Late Arrival Cutoff</label>
               <input type="time" className="input" value={form.late_cutoff_time} onChange={(e) => set('late_cutoff_time', e.target.value)} />
-              <p className="text-xs text-gray-400 mt-1">Check-in after this = Late</p>
+              <p className="text-xs text-gray-400 mt-1">Check-in after this time is considered late</p>
             </div>
             <div>
               <label className="label">Absence Processing Time</label>
               <input type="time" className="input" value={form.absence_processing_time} onChange={(e) => set('absence_processing_time', e.target.value)} />
-              <p className="text-xs text-gray-400 mt-1">Auto-mark absent at this time</p>
+              <p className="text-xs text-gray-400 mt-1">Teachers not checked in by this time are auto-marked absent</p>
             </div>
           </div>
         </div>

@@ -7,6 +7,7 @@ import Home from './pages/Home';
 import Login from './pages/Login';
 import { ADMIN_LOGIN, TEACHER_LOGIN } from './utils/authRoutes';
 import TeacherDashboard from './pages/teacher/Dashboard';
+import TeacherAttendance from './pages/teacher/Attendance';
 import PrincipalDashboard from './pages/principal/Dashboard';
 import Teachers from './pages/principal/Teachers';
 import Attendance from './pages/principal/Attendance';
@@ -43,6 +44,7 @@ export default function App() {
             element={<ProtectedRoute role="teacher" />}
           >
             <Route index element={<TeacherDashboard />} />
+            <Route path="attendance" element={<TeacherAttendance />} />
           </Route>
 
           {/* Admin routes (principal role) */}

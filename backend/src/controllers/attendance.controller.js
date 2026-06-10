@@ -79,7 +79,7 @@ async function checkIn(req, res, next) {
        VALUES ($1, $2, $3, 'present', $4, $5)
        ON CONFLICT (teacher_id, attendance_date) DO UPDATE SET
          check_in_time = CASE WHEN attendance.check_in_time IS NULL THEN $3 ELSE attendance.check_in_time END,
-         status = 'present',
+         status = CASE WHEN attendance.status = 'short_leave' THEN 'short_leave' ELSE 'present' END,
          check_in_latitude = CASE WHEN attendance.check_in_time IS NULL THEN $4 ELSE attendance.check_in_latitude END,
          check_in_longitude = CASE WHEN attendance.check_in_time IS NULL THEN $5 ELSE attendance.check_in_longitude END,
          updated_at = NOW()`,
@@ -359,7 +359,7 @@ async function getAttendanceLogs(req, res, next) {
 async function updateAttendance(req, res, next) {
   try {
     const { status, remarks } = req.body;
-    const validStatuses = ['present', 'absent', 'medical_leave', 'holiday', 'day_off'];
+    const validStatuses = ['present', 'absent', 'medical_leave', 'holiday', 'day_off', 'short_leave'];
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ success: false, message: 'Invalid status' });
     }
@@ -434,8 +434,55 @@ async function markAbsentTeachers() {
   console.log(`[CRON] Auto-marked absent for ${teachers.rows.length} teachers on ${today}`);
 }
 
+async function getTeacherAttendance(req, res, next) {
+  try {
+    const teacherId = req.user.id;
+    const { page = 1, limit = 20 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    const [countResult, dataResult] = await Promise.all([
+      pool.query('SELECT COUNT(*) FROM attendance WHERE teacher_id = $1', [teacherId]),
+      pool.query(
+        `SELECT attendance_date, check_in_time, check_out_time, status, remarks, medical_certificate_path
+         FROM attendance WHERE teacher_id = $1
+         ORDER BY attendance_date DESC LIMIT $2 OFFSET $3`,
+        [teacherId, parseInt(limit), offset]
+      ),
+    ]);
+
+    res.json({
+      success: true,
+      records: dataResult.rows,
+      total: parseInt(countResult.rows[0].count),
+      page: parseInt(page),
+      totalPages: Math.ceil(parseInt(countResult.rows[0].count) / parseInt(limit)),
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getTeacherAttendanceLogs(req, res, next) {
+  try {
+    const teacherId = req.user.id;
+    const { date } = req.query;
+    const params = [teacherId];
+    let condition = 'teacher_id = $1';
+    if (date) { condition += ' AND attendance_date = $2'; params.push(date); }
+
+    const result = await pool.query(
+      `SELECT action_type, timestamp FROM attendance_logs WHERE ${condition} ORDER BY timestamp ASC LIMIT 100`,
+      params
+    );
+    res.json({ success: true, logs: result.rows });
+  } catch (err) {
+    next(err);
+  }
+}
+
 module.exports = {
   checkIn, checkOut, applyMedicalLeave, getTodayStatus,
   getAttendanceList, getAttendanceLogs, updateAttendance,
+  getTeacherAttendance, getTeacherAttendanceLogs,
   markAbsentTeachers, markDayOffOrHoliday,
 };

@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import api from '../../api';
 import toast from 'react-hot-toast';
-import { Search, Filter, Edit2, X, ChevronLeft, ChevronRight, List } from 'lucide-react';
+import { Search, Filter, Edit2, X, ChevronLeft, ChevronRight, List, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
 
-const STATUSES = ['present', 'absent', 'medical_leave', 'holiday', 'day_off', 'not_marked_yet'];
+const STATUSES = ['present', 'absent', 'medical_leave', 'holiday', 'day_off', 'short_leave', 'not_marked_yet'];
+const EDIT_STATUSES = ['present', 'absent', 'medical_leave', 'holiday', 'day_off', 'short_leave'];
 
 const STATUS_LABELS = {
   present:        'Present',
@@ -12,6 +13,7 @@ const STATUS_LABELS = {
   medical_leave:  'Medical Leave',
   holiday:        'Holiday',
   day_off:        'Day Off',
+  short_leave:    'Short Leave',
   not_marked_yet: 'Not Marked Yet',
 };
 
@@ -21,6 +23,7 @@ const STATUS_CLASSES = {
   medical_leave:  'badge-medical_leave',
   holiday:        'px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700',
   day_off:        'px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700',
+  short_leave:    'px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700',
   not_marked_yet: 'px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500',
 };
 
@@ -77,11 +80,19 @@ function LogsModal({ record, onClose }) {
       ) : (
         <div className="space-y-2">
           {logs.map((log, i) => (
-            <div key={i} className={`flex items-center justify-between px-3 py-2 rounded-lg text-sm ${log.action_type === 'check_in' ? 'bg-green-50' : 'bg-orange-50'}`}>
-              <span className={`font-medium ${log.action_type === 'check_in' ? 'text-green-700' : 'text-orange-700'}`}>
-                {log.action_type === 'check_in' ? 'Check In' : 'Check Out'}
-              </span>
-              <span className="text-gray-600">{format(new Date(log.timestamp), 'HH:mm')}</span>
+            <div key={i} className={`px-3 py-2 rounded-lg text-sm ${log.action_type === 'check_in' ? 'bg-green-50' : 'bg-orange-50'}`}>
+              <div className="flex items-center justify-between">
+                <span className={`font-medium ${log.action_type === 'check_in' ? 'text-green-700' : 'text-orange-700'}`}>
+                  {log.action_type === 'check_in' ? 'Check In' : 'Check Out'}
+                </span>
+                <span className="text-gray-600">{format(new Date(log.timestamp), 'HH:mm')}</span>
+              </div>
+              {log.latitude && log.longitude && (
+                <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                  <MapPin size={10} />
+                  {parseFloat(log.latitude).toFixed(6)}, {parseFloat(log.longitude).toFixed(6)}
+                </p>
+              )}
             </div>
           ))}
         </div>
@@ -281,7 +292,7 @@ export default function Attendance() {
               <label className="label">New Status</label>
               <select className="input" value={editForm.status}
                 onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}>
-                {STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
+                {EDIT_STATUSES.map((s) => <option key={s} value={s}>{STATUS_LABELS[s]}</option>)}
               </select>
             </div>
             <div>

@@ -2,13 +2,14 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  CalendarCheck, LogOut, X,
+  CalendarCheck, LogOut, X, ClipboardList,
 } from 'lucide-react';
 import { SidebarBrand } from './AppLogo';
 import { TEACHER_LOGIN } from '../utils/authRoutes';
 
 const teacherNav = [
-  { to: '/teacher', label: 'My Attendance', icon: CalendarCheck, end: true },
+  { to: '/teacher', label: 'Today', icon: CalendarCheck, end: true },
+  { to: '/teacher/attendance', label: 'My History', icon: ClipboardList, end: false },
 ];
 
 export default function TeacherSidebar({ onClose }) {

@@ -4,17 +4,28 @@ const PDFDocument = require('pdfkit');
 
 function formatStatus(s) {
   return {
-    present: 'Present',
-    absent: 'Absent',
+    present:       'Present',
+    absent:        'Absent',
     medical_leave: 'Medical Leave',
-    holiday: 'Holiday',
-    day_off: 'Day Off',
+    holiday:       'Holiday',
+    day_off:       'Day Off',
+    short_leave:   'Short Leave',
   }[s] || s;
+}
+
+function formatDate(dt) {
+  if (!dt) return '-';
+  return String(dt).split('T')[0].split('-').reverse().join('/');
 }
 
 function formatTime(dt) {
   if (!dt) return '-';
-  return new Date(dt).toLocaleTimeString('en-PK', { hour: '2-digit', minute: '2-digit', hour12: true });
+  return new Date(dt).toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Karachi',
+  });
 }
 
 async function queryReport(startDate, endDate) {
@@ -37,7 +48,7 @@ async function getDailyReport(req, res, next) {
 
     const summary = rows.reduce(
       (acc, r) => { acc[r.status] = (acc[r.status] || 0) + 1; return acc; },
-      { present: 0, absent: 0, medical_leave: 0, holiday: 0, day_off: 0 }
+      { present: 0, absent: 0, medical_leave: 0, holiday: 0, day_off: 0, short_leave: 0 }
     );
 
     res.json({ success: true, date, records: rows, summary });
@@ -101,7 +112,7 @@ async function exportExcel(req, res, next) {
 
     rows.forEach((r) => {
       sheet.addRow({
-        date: r.attendance_date,
+        date: formatDate(r.attendance_date),
         teacher_name: r.teacher_name,
         username: r.username,
         mobile_number: r.mobile_number || '-',
@@ -167,7 +178,7 @@ async function exportPDF(req, res, next) {
       doc.rect(startX, y, cols.reduce((a, c) => a + c.width, 0), rowH).fill(idx % 2 === 0 ? '#F9FAFB' : '#FFFFFF');
       x = startX;
       const vals = [
-        String(r.attendance_date).split('T')[0],
+        formatDate(r.attendance_date),
         r.teacher_name,
         formatStatus(r.status),
         formatTime(r.check_in_time),

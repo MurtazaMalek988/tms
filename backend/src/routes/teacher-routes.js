@@ -8,6 +8,8 @@ const {
   checkOut,
   applyMedicalLeave,
   getTodayStatus,
+  getTeacherAttendance,
+  getTeacherAttendanceLogs,
 } = require('../controllers/attendance.controller');
 
 const certStorage = multer.diskStorage({
@@ -27,5 +29,7 @@ router.post('/checkin', checkIn);
 router.post('/checkout', checkOut);
 router.post('/medical-leave', certUpload.single('certificate'), applyMedicalLeave);
 router.get('/attendance/today', getTodayStatus);
+router.get('/attendance', getTeacherAttendance);
+router.get('/attendance/logs', getTeacherAttendanceLogs);
 
 module.exports = router;

@@ -43,20 +43,18 @@ async function runMigrations() {
       END $$
     `);
 
-    // 4. Migrate short_leave → absent and update status constraint
-    await client.query(`UPDATE attendance SET status = 'absent' WHERE status = 'short_leave'`);
+    // 4. Update status constraint to include all required statuses (including short_leave re-added)
     await client.query(`
       DO $$
       BEGIN
-        -- Only update constraint if it doesn't already include the new statuses
         IF NOT EXISTS (
           SELECT 1 FROM information_schema.check_constraints
           WHERE constraint_name = 'attendance_status_check'
-          AND check_clause LIKE '%day_off%'
+          AND check_clause LIKE '%short_leave%'
         ) THEN
           ALTER TABLE attendance DROP CONSTRAINT IF EXISTS attendance_status_check;
           ALTER TABLE attendance ADD CONSTRAINT attendance_status_check
-            CHECK (status IN ('present', 'absent', 'medical_leave', 'holiday', 'day_off'));
+            CHECK (status IN ('present', 'absent', 'medical_leave', 'holiday', 'day_off', 'short_leave'));
         END IF;
       END $$
     `);
