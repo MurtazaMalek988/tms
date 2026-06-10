@@ -40,16 +40,28 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 app.use(errorHandler);
 
+const { pool } = require('./config/database');
+
 // Cron: mark day-off / holiday records at midnight
 cron.schedule('0 0 * * *', async () => {
   console.log('[CRON] Running day-off/holiday marking...');
   try { await markDayOffOrHoliday(); } catch (e) { console.error('[CRON] Error:', e.message); }
 });
 
-// Cron: mark absent teachers at configured absence_processing_time (default 17:00)
-cron.schedule('0 17 * * *', async () => {
-  console.log('[CRON] Running auto-absent marking...');
-  try { await markAbsentTeachers(); } catch (e) { console.error('[CRON] Error:', e.message); }
+// Cron: every minute — fire absent marking when current time matches absence_processing_time from settings
+cron.schedule('* * * * *', async () => {
+  try {
+    const result = await pool.query('SELECT absence_processing_time FROM settings WHERE id = 1');
+    if (!result.rows.length) return;
+
+    const timeStr = result.rows[0].absence_processing_time; // e.g. "08:37:00"
+    const [h, m] = timeStr.split(':').map(Number);
+    const now = new Date();
+    if (now.getHours() === h && now.getMinutes() === m) {
+      console.log(`[CRON] absence_processing_time hit (${h}:${String(m).padStart(2,'0')}) — marking absent...`);
+      await markAbsentTeachers();
+    }
+  } catch (e) { console.error('[CRON] Error checking absence time:', e.message); }
 });
 
 async function start() {
