@@ -4,22 +4,24 @@ import toast from 'react-hot-toast';
 import { Search, Filter, Edit2, X, ChevronLeft, ChevronRight, List } from 'lucide-react';
 import { format } from 'date-fns';
 
-const STATUSES = ['present', 'absent', 'medical_leave', 'holiday', 'day_off'];
+const STATUSES = ['present', 'absent', 'medical_leave', 'holiday', 'day_off', 'not_marked_yet'];
 
 const STATUS_LABELS = {
-  present:       'Present',
-  absent:        'Absent',
-  medical_leave: 'Medical Leave',
-  holiday:       'Holiday',
-  day_off:       'Day Off',
+  present:        'Present',
+  absent:         'Absent',
+  medical_leave:  'Medical Leave',
+  holiday:        'Holiday',
+  day_off:        'Day Off',
+  not_marked_yet: 'Not Marked Yet',
 };
 
 const STATUS_CLASSES = {
-  present:       'badge-present',
-  absent:        'badge-absent',
-  medical_leave: 'badge-medical_leave',
-  holiday:       'px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700',
-  day_off:       'px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700',
+  present:        'badge-present',
+  absent:         'badge-absent',
+  medical_leave:  'badge-medical_leave',
+  holiday:        'px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700',
+  day_off:        'px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700',
+  not_marked_yet: 'px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500',
 };
 
 function StatusBadge({ status }) {

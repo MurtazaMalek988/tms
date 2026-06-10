@@ -79,6 +79,7 @@ async function checkIn(req, res, next) {
        VALUES ($1, $2, $3, 'present', $4, $5)
        ON CONFLICT (teacher_id, attendance_date) DO UPDATE SET
          check_in_time = CASE WHEN attendance.check_in_time IS NULL THEN $3 ELSE attendance.check_in_time END,
+         check_out_time = NULL,
          status = 'present',
          check_in_latitude = CASE WHEN attendance.check_in_time IS NULL THEN $4 ELSE attendance.check_in_latitude END,
          check_in_longitude = CASE WHEN attendance.check_in_time IS NULL THEN $5 ELSE attendance.check_in_longitude END,
@@ -131,6 +132,7 @@ async function checkOut(req, res, next) {
         [now, latitude, longitude, existing.rows[0].id]
       );
     }
+
 
     await pool.query(
       'INSERT INTO attendance_logs (teacher_id, attendance_date, action_type, timestamp, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6)',
@@ -239,11 +241,66 @@ async function getAttendanceList(req, res, next) {
   try {
     const { date, status, search, page = 1, limit = 50 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    // When filtering by date: LEFT JOIN so teachers with no record show as not_marked_yet
+    if (date) {
+      const params = [date];
+      let i = 2;
+      const conditions = ['t.is_active = TRUE'];
+
+      if (search) {
+        conditions.push(`(t.name ILIKE $${i} OR t.username ILIKE $${i})`);
+        params.push(`%${search}%`);
+        i++;
+      }
+
+      let statusCondition = '';
+      if (status === 'not_marked_yet') {
+        statusCondition = 'AND a.id IS NULL';
+      } else if (status) {
+        statusCondition = `AND a.status = $${i}`;
+        params.push(status);
+        i++;
+      }
+
+      const where = conditions.join(' AND ');
+
+      const countResult = await pool.query(
+        `SELECT COUNT(*) FROM teachers t
+         LEFT JOIN attendance a ON a.teacher_id = t.id AND a.attendance_date = $1
+         WHERE ${where} ${statusCondition}`,
+        params
+      );
+
+      const dataResult = await pool.query(
+        `SELECT
+           t.id AS teacher_id, t.name AS teacher_name, t.username, t.mobile_number,
+           a.id, $1::date AS attendance_date,
+           COALESCE(a.status, 'not_marked_yet') AS status,
+           a.check_in_time, a.check_out_time, a.remarks, a.medical_certificate_path
+         FROM teachers t
+         LEFT JOIN attendance a ON a.teacher_id = t.id AND a.attendance_date = $1
+         WHERE ${where} ${statusCondition}
+         ORDER BY t.name ASC
+         LIMIT $${i} OFFSET $${i + 1}`,
+        [...params, parseInt(limit), offset]
+      );
+
+      const total = parseInt(countResult.rows[0].count);
+      return res.json({
+        success: true,
+        attendance: dataResult.rows,
+        total,
+        page: parseInt(page),
+        totalPages: Math.ceil(total / parseInt(limit)),
+      });
+    }
+
+    // No date filter: show existing records only
     const params = [];
     const conditions = ['1=1'];
     let i = 1;
 
-    if (date) { conditions.push(`a.attendance_date = $${i++}`); params.push(date); }
     if (status) { conditions.push(`a.status = $${i++}`); params.push(status); }
     if (search) { conditions.push(`(t.name ILIKE $${i} OR t.username ILIKE $${i})`); params.push(`%${search}%`); i++; }
 
@@ -253,7 +310,6 @@ async function getAttendanceList(req, res, next) {
       `SELECT COUNT(*) FROM attendance a JOIN teachers t ON a.teacher_id = t.id WHERE ${where}`,
       params
     );
-
     const dataResult = await pool.query(
       `SELECT a.*, t.name AS teacher_name, t.username, t.mobile_number
        FROM attendance a JOIN teachers t ON a.teacher_id = t.id
