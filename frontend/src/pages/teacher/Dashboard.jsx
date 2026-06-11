@@ -18,6 +18,7 @@ const STATUS_CONFIG = {
 
 export default function TeacherDashboard() {
   const { user } = useAuth();
+  const today = format(new Date(), 'yyyy-MM-dd');
   const [attendance, setAttendance] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,8 +27,6 @@ export default function TeacherDashboard() {
   const [medForm, setMedForm] = useState({ remarks: '', certificate: null, start_date: today, end_date: today });
   const [geofence, setGeofence] = useState(null);
   const { loc, locError, locLoading, getLocation, useTestLocation } = useGeolocation();
-
-  const today = format(new Date(), 'yyyy-MM-dd');
   const premises = getPremisesStatus(loc, geofence);
   const locationRequired = geofence?.enabled;
   const canMarkAttendanceHere = !locationRequired || (loc && premises.withinPremises);
